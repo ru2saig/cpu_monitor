@@ -110,14 +110,14 @@ if __name__ == "__main__":
 
       ros_ip = node_api[7:] # strip http://
       ros_ip = ros_ip.split(':')[0] # strip :<port>/
-      local_node = "localhost" in node_api or \
-                  "127.0.0.1" in node_api or \
-                  (this_ip is not None and this_ip == ros_ip) or \
-                  subprocess.check_output("hostname").decode('utf-8').strip() in node_api
-      if not local_node:
-        ignored_nodes.add(node)
-        rospy.loginfo("[cpu monitor] ignoring node %s with URI %s" % (node, node_api))
-        continue
+      #local_node = "localhost" in node_api or \
+      #            "127.0.0.1" in node_api or \
+      #            (this_ip is not None and this_ip == ros_ip) or \
+      #            subprocess.check_output("hostname").decode('utf-8').strip() in node_api
+      #if not local_node:
+      #  ignored_nodes.add(node)
+      #  rospy.loginfo("[cpu monitor] ignoring node %s with URI %s" % (node, node_api))
+      #  continue
 
       try:
         resp = ServerProxy(node_api).getPid('/NODEINFO')
