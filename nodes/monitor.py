@@ -22,23 +22,25 @@ def ns_join(*names):
   return functools.reduce(rospy.names.ns_join, names, "")
 
 class Node:
-  def __init__(self, name, pid, iris_mode):
+  def __init__(self, name, pid, irix_mode):
     self.name = name
     self.proc = psutil.Process(pid)
-    self.iris_mode = iris_mode
+    self.irix_mode = irix_mode
     self.cpu_publisher = rospy.Publisher(ns_join("~", name[1:], "cpu"), Float32, queue_size=20)
-    self.mem_publisher = rospy.Publisher(ns_join("~", name[1:], "mem"), UInt64, queue_size=20)
+    self.mem_publisher = rospy.Publisher(ns_join("~", name[1:], "mem"), Float32, queue_size=20)
 
   def publish(self):
     self.cpu = self.proc.cpu_percent()
     save = self.cpu
-    if not self.iris_mode:
+    if not self.irix_mode:
       self.cpu /= psutil.cpu_count()
-      #self.cpu = math.trunc(self.cpu * 100) / 100
+      self.cpu = math.trunc(self.cpu * 100) / 100
 
-    self.mem = self.proc.memory_info().rss
+    self.mem = self.proc.memory_percent()
+    self.mem = math.trunc(self.mem * 100) / 100
+
     self.cpu_publisher.publish(Float32(self.cpu))
-    self.mem_publisher.publish(UInt64(self.mem))
+    self.mem_publisher.publish(Float32(self.mem))
 
   def get_values(self):
     return self.cpu, self.mem
@@ -59,7 +61,7 @@ class CSVWriter:
     self.source_list = source_list
     self.file.write('time')
     for source in self.source_list:
-      self.file.write(', %s cpu, %s mem' % (source, source))
+      self.file.write(', %s cpu (%%), %s mem (%%)' % (source, source))
     self.file.write('\n')
     rospy.loginfo("[cpu monitor] monitoring nodes: %s" % self.source_list)
     self.header_init = True
@@ -69,7 +71,7 @@ class CSVWriter:
     for source in self.source_list:
       if source in node_map and node_map[source].alive():
         cpu, mem = node_map[source].get_values()
-        new_csv_line += ', %.2f, %d' % (cpu, mem)
+        new_csv_line += ', %.2f, %.2f' % (cpu, mem)
       else:
         new_csv_line += ', , '
     new_csv_line += "\n"
@@ -81,7 +83,7 @@ if __name__ == "__main__":
 
   poll_period = rospy.get_param('~poll_period', 1.0)
   save_to_csv = rospy.get_param('~save_to_csv', False)
-  iris_mode = rospy.get_param('~iris_mode', True)
+  irix_mode = rospy.get_param('~irix_mode', True)
   csv_file_name = rospy.get_param('~csv_file', 'cpu_monitor.csv')
   source_list = rospy.get_param('~source_list', [])
 
@@ -139,7 +141,7 @@ if __name__ == "__main__":
           rospy.logerr("[cpu monitor] failed to get pid for node %s from NODEINFO response: %s" % (node, resp))
         else:
           try:
-            node_map[node] = Node(name=node, pid=pid, iris_mode=iris_mode)
+            node_map[node] = Node(name=node, pid=pid, irix_mode=irix_mode)
           except psutil.NoSuchProcess:
             rospy.logwarn("[cpu monitor] psutil can't see %s (pid = %d). Ignoring" % (node, pid))
             ignored_nodes.add(node)
