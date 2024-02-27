@@ -2,7 +2,7 @@
 
 [monitor.py](nodes/monitor.py) is a ROS node that will ask the ROS master for a list of nodes and publish their CPU and memory usage as ROS topics. It will also publish the total system CPU and memory usage.
 
-Only nodes running on the same machine will have their CPU and memory usage published.
+Only nodes running on the same machine will have their CPU and memory usage published. Both of these are in %.
 
 ## Dependencies
 
@@ -49,3 +49,15 @@ roslaunch cpu_monitor cpu_monitor.launch source_list:="[<node_name_1>, <node_nam
 
 Or you can set the default values in the included launch file `cpu_monitor.launch`
 
+### Irix Mode
+By default, IRIX mode is used for reporting CPU usage of a node. If you want CPU usage in solaris mode (essentially total usage/cpu core count), set it to false.
+
+Setting IRIX mode to false on the command-line:
+```
+roslaunch cpu_monitor cpu_monitor.launch irix_mode:=False
+```
+
+*Note*: This was testing on a Linux machine, I believe that on Windows this would result in wrong reports. Since I do not have access to a Windows machine, I did not pursue that issue further. If you face it, open an issue in this repo!
+
+### TODO: GPU usage per node
+Who knows when? Tomorrow? Day after? But one day!
