@@ -58,7 +58,7 @@ class CSVWriter:
       self.init_header(source_list)
 
   def init_header(self, source_list):
-    self.source_list = source_list
+    self.source_list = sorted(source_list)
     self.file.write('time')
     for source in self.source_list:
       self.file.write(', %s cpu (%%), %s mem (%%)' % (source, source))
